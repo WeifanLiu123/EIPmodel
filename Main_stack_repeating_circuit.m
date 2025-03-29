@@ -11,11 +11,14 @@ L_aem     = 500e-6;                 % Electrode thickness
 p_pore    = 0.3;                    % pore volume fraction
 p_IEP     = 0.6;                    % polymer volume fraction
 X_poly    = 2500;                   % charge density
-Eta       = 0.05;                   % diffusion reduction factor
+Eta_cse   = 0.1*(0.6)^(1.5);        % diffusion reduction factor
+Eta_aem   = 0.1;                    % diffusion reduction factor
 Di_Na_b   = 1.33 * 10^-9;           % m2 s-1, Na+ effective diffusion coefficient
 Di_Cl_b   = 2.03 * 10^-9;           % m2 s-1, Cl- effective diffusion coefficient
-Di_Na     = Eta* 1.33 * 10^-9;           % m2 s-1, Na+ effective diffusion coefficient
-Di_Cl     = Eta* 2.03 * 10^-9;           % m2 s-1, Cl- effective diffusion coefficient
+Di_Na_cse = Eta_cse * Di_Na_b;      % m2 s-1, Na+ effective diffusion coefficient
+Di_Cl_cse = Eta_cse * Di_Cl_b;      % m2 s-1, Cl- effective diffusion coefficient
+Di_Na_aem = Eta_aem * Di_Na_b;      % m2 s-1, Na+ effective diffusion coefficient
+Di_Cl_aem = Eta_aem * Di_Cl_b;      % m2 s-1, Cl- effective diffusion coefficient
 z_Na      = 1;                      % Na+ valance
 z_Cl      = -1;                     % Cl- valance
 % operational conditions
@@ -26,7 +29,7 @@ c_feed_con= c_con_0;                % initial concentration in concentrate tank
 c_sp_di   = c_feed_di;              % initial concentration in diluate spacer channel
 c_sp_con  = c_feed_con;             % initial concentration in concentrate spacer channel
 n         = 2;                      % cycle number 
-TT        = 20;                    % half cycle time
+TT        = 20;                     % half cycle time
 np        = 100;                    % position grid number
 mp        = 100;                    % time grid number
 dx        = L_elec / np;            % position grid
@@ -135,7 +138,7 @@ for mm = 1:length(i_list)
         x0 = [c_IEP_Na_ini , c_IEP_Cl_ini, phi_IEP_ini,   0,0,0];
         options = optimoptions('fsolve', 'MaxFunEvals', 10000000, 'Maxiter', 10000000, 'Display', 'off','Algorithm', 'trust-region','FunctionTolerance',1e-10,'OptimalityTolerance',1e-10);
     
-        [x, fval, exitflag] = fsolve(@(x) Donnandialysis(x, x0, np, dx, X_poly, Di_Na, Di_Cl, c_di_0,c_con_0,  z_Na, z_Cl), x0, options);
+        [x, fval, exitflag] = fsolve(@(x) Donnandialysis(x, x0, np, dx, X_poly, Di_Na_cse, Di_Cl_cse, c_di_0,c_con_0,  z_Na, z_Cl), x0, options);
     
         c_IEP_Na_ini = x(1:np+1);
         c_IEP_Cl_ini = x(np+2:2*np+2);
@@ -199,7 +202,7 @@ for mm = 1:length(i_list)
         for j = 1:mp/2
             I_max = I_max_0 *(1-exp(-j*30/mp*2)-exp(-(mp/2-j)*30/mp*2));
             %% CSE unit
-                [x, fval, exitflag] = fsolve(@(x) stack_unit(x, x0, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_di_0,c_con_0,  Alfa, z_Na, z_Cl,E,tau_sp, kk,c_di_interface1,c_con_interface1,c_di_interface2,c_con_interface2 ), x0, options);
+                [x, fval, exitflag] = fsolve(@(x) stack_unit(x, x0, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_cse, Di_Cl_cse,Di_Na_b, Di_Cl_b, I_max, L_elec, c_di_0,c_con_0,  Alfa, z_Na, z_Cl,E,tau_sp, kk,c_di_interface1,c_con_interface1,c_di_interface2,c_con_interface2 ), x0, options);
                 disp(exitflag)
                 x0 = x;
                 c_IEP_Na_list1_inital(j,1:np+1)            = x(0*(np+1)+1:1*(np+1));
@@ -225,17 +228,17 @@ for mm = 1:length(i_list)
                 cell_voltage_inital(j)                    = (phi_carbon_list2_inital(j) - phi_carbon_list1_inital(j)+2*EER*I_max_0*F/RT)*RT/F;
 
             %% Spacer channel unit
-                [x, fval, exitflag] = fsolve(@(x) spacer_unit1(x, x1, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x1, options);
+                [x, fval, exitflag] = fsolve(@(x) spacer_unit1(x, x1, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_aem, Di_Cl_aem,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x1, options);
                 disp(exitflag)
                 x1 = x;
-                c_di_interface1                                 = x(0*(np+1)+1);
-                c_con_interface1                                = x(6*(np+1)+np+1);
+                c_di_interface1                                 = x(7*(np+1));
+                c_con_interface1                                = x(1);
 
-                [x, fval, exitflag] = fsolve(@(x) spacer_unit2(x, x2, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x2, options);
+                [x, fval, exitflag] = fsolve(@(x) spacer_unit2(x, x2, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_aem, Di_Cl_aem,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x2, options);
                 disp(exitflag)
                 x2 = x;
-                c_di_interface2                                 = x(0*(np+1)+1);
-                c_con_interface2                                = x(6*(np+1)+np+1);
+                c_di_interface2                                 = x(7*(np+1));
+                c_con_interface2                                = x(1);
 
         end
 
@@ -245,7 +248,7 @@ for mm = 1:length(i_list)
             for j = 1:mp
                 I_max = I_max_0 *(1-exp(-j*30/mp)-exp(-(100-j)*30/mp));
                 %% CSE unit
-                [x, fval, exitflag] = fsolve(@(x) stack_unit(x, x0, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_di_0,c_con_0,  Alfa, z_Na, z_Cl,E,tau_sp, kk,c_di_interface1,c_con_interface1,c_di_interface2,c_con_interface2 ), x0, options);
+                [x, fval, exitflag] = fsolve(@(x) stack_unit(x, x0, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_cse, Di_Cl_cse,Di_Na_b, Di_Cl_b, I_max, L_elec, c_di_0,c_con_0,  Alfa, z_Na, z_Cl,E,tau_sp, kk,c_di_interface1,c_con_interface1,c_di_interface2,c_con_interface2 ), x0, options);
                 % disp(exitflag)
                 x0 = x;
                 % CSE 1
@@ -292,7 +295,7 @@ for mm = 1:length(i_list)
                 j_Cl_right_flux                     =  x(kk*(np+1)+7);
 
                 %% Spacer channel unit
-                [x, fval, exitflag] = fsolve(@(x) spacer_unit1(x, x1, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x1, options);
+                [x, fval, exitflag] = fsolve(@(x) spacer_unit1(x, x1, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_aem, Di_Cl_aem,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x1, options);
                 % disp(exitflag)
                 x1 = x;
     
@@ -310,10 +313,10 @@ for mm = 1:length(i_list)
                 phi_sp_di_list1((ii-1)*2*mp+j,1:np+1)           = x(8*(np+1)+1:9*(np+1));
                 %
     
-                c_di_interface1                                 = x(0*(np+1)+1);
-                c_con_interface1                                = x(6*(np+1)+np+1);
+                c_di_interface1                                 = x(7*(np+1));
+                c_con_interface1                                = x(1);
     
-                [x, fval, exitflag] = fsolve(@(x) spacer_unit2(x, x2, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x2, options);
+                [x, fval, exitflag] = fsolve(@(x) spacer_unit2(x, x2, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_aem, Di_Cl_aem,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x2, options);
                 % disp(exitflag)
                 x2 = x;
     
@@ -330,8 +333,8 @@ for mm = 1:length(i_list)
                 c_sp_di_list2((ii-1)*2*mp+j,1:np+1)             = x(6*(np+1)+1:7*(np+1));
                 phi_sp_di_list2((ii-1)*2*mp+j,1:np+1)           = x(8*(np+1)+1:9*(np+1));
     
-                c_di_interface2                                 = x(0*(np+1)+1);
-                c_con_interface2                                = x(6*(np+1)+np+1);
+                c_di_interface2                                 = x(7*(np+1));
+                c_con_interface2                                = x(1);
     
                 
     
@@ -349,7 +352,7 @@ for mm = 1:length(i_list)
             for j = mp+1:2*mp
                 I_max = - I_max_0 *(exp(-(j-100)*30/mp)+exp(-(200-j)*30/mp)-1);
                 %% CSE unit
-                [x, fval, exitflag] = fsolve(@(x) stack_unit(x, x0, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_di_0,c_con_0,  Alfa, z_Na, z_Cl,E,tau_sp, kk,c_di_interface1,c_con_interface1,c_di_interface2,c_con_interface2 ), x0, options);
+                [x, fval, exitflag] = fsolve(@(x) stack_unit(x, x0, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_cse, Di_Cl_cse,Di_Na_b, Di_Cl_b, I_max, L_elec, c_di_0,c_con_0,  Alfa, z_Na, z_Cl,E,tau_sp, kk,c_di_interface1,c_con_interface1,c_di_interface2,c_con_interface2 ), x0, options);
                 % disp(exitflag)
                 x0 = x;
                 % CSE 1
@@ -395,7 +398,7 @@ for mm = 1:length(i_list)
                 j_Cl_left_flux                      =  x(kk*(np+1)+6);
                 j_Cl_right_flux                     =  x(kk*(np+1)+7);
                 %% Spacer channel unit
-                [x, fval, exitflag] = fsolve(@(x) spacer_unit1(x, x1, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x1, options);
+                [x, fval, exitflag] = fsolve(@(x) spacer_unit1(x, x1, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_aem, Di_Cl_aem,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x1, options);
                 % disp(exitflag)
                 x1 = x;
     
@@ -413,10 +416,10 @@ for mm = 1:length(i_list)
                 phi_sp_di_list1((ii-1)*2*mp+j,1:np+1)           = x(8*(np+1)+1:9*(np+1));
                 %
     
-                c_di_interface1                                 = x(0*(np+1)+1);
-                c_con_interface1                                = x(6*(np+1)+np+1);
+                c_di_interface1                                 = x(7*(np+1));
+                c_con_interface1                                = x(1);
     
-                [x, fval, exitflag] = fsolve(@(x) spacer_unit2(x, x2, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na, Di_Cl,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x2, options);
+                [x, fval, exitflag] = fsolve(@(x) spacer_unit2(x, x2, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_aem, Di_Cl_aem,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x2, options);
                 % disp(exitflag)
                 x2 = x;
  
@@ -433,8 +436,8 @@ for mm = 1:length(i_list)
                 c_sp_di_list2((ii-1)*2*mp+j,1:np+1)             = x(6*(np+1)+1:7*(np+1));
                 phi_sp_di_list2((ii-1)*2*mp+j,1:np+1)           = x(8*(np+1)+1:9*(np+1));
     
-                c_di_interface2                                 = x(0*(np+1)+1);
-                c_con_interface2                                = x(6*(np+1)+np+1);
+                c_di_interface2                                 = x(7*(np+1));
+                c_con_interface2                                = x(1);
                
                 cell_voltage_list((ii-1)*2*mp+j)                = phi_carbon_list2((ii-1)*2*mp+j) - phi_carbon_list1((ii-1)*2*mp+j)+2*EER*I_max_0*F/RT;
     
@@ -451,7 +454,6 @@ for mm = 1:length(i_list)
     cell_unit = cell_voltage_list*RT/F;
     cell_unit_list(mm) = mean(cell_voltage_list)*RT/F;
 end
-
 
 
 
