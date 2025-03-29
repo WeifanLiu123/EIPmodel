@@ -13,8 +13,8 @@ L_aem     = 500e-6;                 % Electrode thickness
 p_pore    = 0.3;                    % pore volume fraction
 p_IEP     = 0.6;                    % polymer volume fraction
 X_poly    = 2500;                   % charge density
-Eta_cse   = 0.05;                   % diffusion reduction factor
-Eta_aem   = 0.05;                   % diffusion reduction factor
+Eta_cse   = 0.1*(0.6)^(1.5);        % diffusion reduction factor
+Eta_aem   = 0.1;                    % diffusion reduction factor
 Di_Na_b   = 1.33 * 10^-9;           % m2 s-1, Na+ effective diffusion coefficient
 Di_Cl_b   = 2.03 * 10^-9;           % m2 s-1, Cl- effective diffusion coefficient
 Di_Na_cse = Eta_cse * Di_Na_b;      % m2 s-1, Na+ effective diffusion coefficient
@@ -30,23 +30,23 @@ c_feed_di = c_di_0;                 % initial concentration in diluate tank
 c_feed_con= c_con_0;                % initial concentration in concentrate tank
 c_sp_di   = c_feed_di;              % initial concentration in diluate spacer channel
 c_sp_con  = c_feed_con;             % initial concentration in concentrate spacer channel
-n         = 320;                      % cycle number 
+n         = 1;                      % cycle number 
 TT        = 5;                      % half cycle time
 np        = 100;                    % position grid number
 mp        = 100;                    % time grid number
 dx        = L_elec / np;            % position grid
 dTT       = TT / mp;                % time grid
-I_max_0   = 20*0.85;                     % A m-2, current density
-L_spacer  = 10e-3;                   % m, thickness of spacer channel
+I_max_0   = 10*0.85;                % A m-2, current density
+L_spacer  = 10e-3;                  % m, thickness of spacer channel
 dsp       = L_spacer/np;            % position grid
 daem      = L_aem/np;               % position grid
 Area      = 7e-4;                   % m2, electrode area
 flowrate  = 5e-6/60;                % m3 s-1, flowrate
 V_sp      = L_spacer*Area;          % m3, spacer channel volume
-V_feed    = 30e-6-V_sp;                  % m3, feed volume
+V_feed    = 30e-6-V_sp;             % m3, feed volume
 tau_sp    = V_sp/flowrate;          % s, hydraulic retention time in the spacer
 tau_feed  = V_feed /flowrate;       % s, hydraulic retention time in the tank
-EER       = 0.0035;                  % external resistance
+EER       = 0.0035;                 % external resistance
 
 %%
 % create list to store results
@@ -215,8 +215,7 @@ for  ii = 1:n
         c_sp_di_list1((ii-1)*2*mp+j,1:np+1)             = x(6*(np+1)+1:7*(np+1));
         phi_sp_di_list1((ii-1)*2*mp+j,1:np+1)           = x(8*(np+1)+1:9*(np+1));
 
-        
-
+   
         c_con_interface                                 = x(0*(np+1)+1);
 
         [x, fval, exitflag] = fsolve(@(x) spacer_unit2(x, x2, charging_discharge, np, dx,dsp,  daem, dTT,X_poly, V_T, F, C_St_vol, p_pore, p_IEP, Di_Na_aem, Di_Cl_aem,Di_Na_b, Di_Cl_b, I_max, L_elec, c_feed_di,c_feed_con,  Alfa, z_Na, z_Cl,E,tau_sp, kk, j_Na_left_flux, j_Na_right_flux,j_Cl_left_flux, j_Cl_right_flux), x2, options);
