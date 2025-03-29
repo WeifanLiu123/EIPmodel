@@ -1,6 +1,5 @@
 clear all; clc;
-% %%
-% % Constants definition
+
 %% Constants definition
 F         = 96485;                  % Faraday constant
 RT        = 8.3144 * 298;           % gas constant*temperature
