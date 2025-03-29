@@ -1,6 +1,6 @@
 clear all; clc;
-%%
-% constants definition
+
+%% constants definition
 F         = 96485;                  % Faraday constant
 RT        = 8.3144 * 298;           % gas constant*temperature
 V_T       = RT / F;                 % thermal voltage
