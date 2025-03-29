@@ -11,9 +11,9 @@ L_elec    = 400e-6;                 % Electrode thickness
 p_pore    = 0.3;                    % pore volume fraction
 p_IEP     = 0.6;                    % polymer volume fraction
 X_poly    = 2500;                   % charge density
-Eta       = 0.05;                   % diffusion reduction factor
+Eta       = 0.1*(0.6)^(1.5);        % diffusion reduction factor
 Di_Na     = Eta* 1.33 * 10^-9;      % m2 s-1, Na+ effective diffusion coefficient
-Di_Cl     = Eta* 1.33 * 10^-9;      % m2 s-1, Cl- effective diffusion coefficient
+Di_Cl     = Eta* 2.03 * 10^-9;      % m2 s-1, Cl- effective diffusion coefficient
 z_Na      = 1;                      % Na+ valance
 z_Cl      = -1;                     % Cl- valance
 % operational conditions
